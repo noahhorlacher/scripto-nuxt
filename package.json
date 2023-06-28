@@ -9,11 +9,14 @@
     "postinstall": "nuxt prepare"
   },
   "devDependencies": {
+    "@iconify-json/tabler": "^1.1.80",
     "@nuxt/devtools": "latest",
+    "@nuxthq/ui": "^2.5.0",
     "@types/node": "^18",
     "nuxt": "^3.6.1"
   },
   "dependencies": {
+    "@popperjs/core": "^2.11.8",
     "@tiptap/extension-character-count": "^2.0.3",
     "@tiptap/extension-document": "^2.0.3",
     "@tiptap/extension-paragraph": "^2.0.3",
@@ -22,9 +25,6 @@
     "@tiptap/extension-typography": "^2.0.3",
     "@tiptap/starter-kit": "^2.0.3",
     "@tiptap/vue-3": "^2.0.3",
-    "@vicons/carbon": "^0.12.0",
-    "@vicons/fluent": "^0.12.0",
-    "@vicons/tabler": "^0.12.0",
-    "axios": "^1.4.0"
+    "v-calendar": "^3.0.3"
   }
 }

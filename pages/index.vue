@@ -1,22 +1,14 @@
-  
-  <script setup lang="ts">
-  import { NDatePicker, type FormInst, type FormRules, type UploadFileInfo, NSelect, NInput, NUpload, NModal, NForm, NFormItem, NCard, NTooltip, NSpin, NSpace, NButton, NIcon, NDynamicTags, useMessage } from 'naive-ui'
+<script setup>
+  // editor
   import { useEditor, EditorContent, BubbleMenu, FloatingMenu } from '@tiptap/vue-3'
   import StarterKit from '@tiptap/starter-kit'
-  import { Location as LocationIcon, Person as PersonIcon, Calendar as CalendarIcon, Edit as EditIcon, Unlink as UnlinkIcon, Attachment as AttachmentIcon, Tag as TagIcon, Image as ImageIcon, Bookmark as TipIcon, Idea as InspirationIcon, Music as MusicIcon, Add as AddIcon, Save as SaveIcon, Star as StarIcon, StarFilled as StarIconFilled, TextBold as BoldIcon, TextItalic as ItalicIcon, TextStrikethrough as StrikethroughIcon } from '@vicons/carbon'
-  import { AlignLeft as LeftIcon, AlignCenter as CenterIcon, AlignRight as RightIcon, AlignJustified as JustifiedIcon, H1 as H1Icon, H2 as H2Icon, List as ListIcon, Blockquote as QuoteIcon, Book2 as WikiIcon, Stack2 as OtherIcon } from "@vicons/tabler"
-  import { Timer12Regular as DraftIcon, Timer12Filled as DraftIconFilled } from '@vicons/fluent'
-  import { ArrowBack as BackIcon } from '@vicons/tabler'
   import Document from '@tiptap/extension-document'
   import Paragraph from '@tiptap/extension-paragraph'
   import Text from '@tiptap/extension-text'
   import Typography from '@tiptap/extension-typography'
   import CharacterCount from '@tiptap/extension-character-count'
   import TextAlign from '@tiptap/extension-text-align'
-  import { onUnmounted } from 'vue'
-  import axios from 'axios'
   
-  const message = useMessage()
   let saving = ref(false)
   
   // for autoSave
@@ -31,69 +23,40 @@
   let firstSave = false
   
   const showNewAttachmentModal = ref(false)
-  // type for the form model
-  interface AttachmentModelType {
-    title: string | null,
-    link: string | null,
-    type: number | null
-  }
-  const newAttachmentModel = ref<AttachmentModelType>({
+  
+  const newAttachmentModel = ref({
     title: null,
     link: null,
     type: 1
   })
-  const newAttachmentFormRef = ref<FormInst | null>(null)
-  const newAttachmentFormRules: FormRules = {
-    category: [
-      { required: true, message: 'Select a category' }
-    ],
-    title: [
-      { required: true, message: 'Give your attachment a title' },
-      { min: 1, message: 'Give your attachment a title' }
-    ],
-    link: [
-      { required: true, message: 'Enter a link' },
-      { min: 1, message: 'Enter a link' }
-    ]
-  }
+
+  const newAttachmentFormRef = ref(null)
   
   const showEditAttachmentModal = ref(false)
-  // type for the form model
-  const editAttachmentModel = ref<AttachmentModelType>({
+
+  const editAttachmentModel = ref({
     title: null,
     link: null,
     type: 1
   })
-  const editAttachmentFormRef = ref<FormInst | null>(null)
-  const editAttachmentFormRules: FormRules = {
-    category: [
-      { required: true, message: 'Select a category' }
-    ],
-    title: [
-      { required: true, message: 'Give your attachment a title' },
-      { min: 1, message: 'Give your attachment a title' }
-    ],
-    link: [
-      { required: true, message: 'Enter a link' },
-      { min: 1, message: 'Enter a link' }
-    ]
-  }
+  const editAttachmentFormRef = ref(null)
+
   let attachmentId
   
   const linkTypes = ref([])
-  axios.get('http://localhost:3000/api/v1/link').then(res => {
-    const data = res.data.data
-    linkTypes.value = data.map(t => {
-      return {
-        label: t.title,
-        value: t.link_type_id
-      }
-    })
-  })
+
+  // get link types
+  //     const data = res.data.data
+  //     linkTypes.value = data.map(t => {
+  //       return {
+  //         name: t.title,
+  //         value: t.link_type_id
+  //       }
+  //     })
   
   const writingModel = ref({
     id: null,
-    created: Date.now(),
+    created: new Date(Date.now()),
     location: null,
     image: '',
     content: lastSave.content,
@@ -104,12 +67,14 @@
     editors: []
   })
   
+  // autosaving
   let autoSaveInterval = setInterval(() => {
     if (firstSave && lastSave.content != editor.value?.getHTML())
       saveDocument()
   }, 5000)
   onUnmounted(() => clearInterval(autoSaveInterval))
   
+  // tiptap editor
   const editor = useEditor({
     extensions: [
       BubbleMenu,
@@ -126,14 +91,26 @@
     ],
     content: `
                   <h1>As ships sail seas</h1>
+                  <h2>Waves will crash</h2>
                   <p>Start adding content!</p>
+                  <blockquote>This is a quote.</blockquote>
+                  <ol>
+                    <li>Item 1</li>
+                    <li>Item 2</li>
+                    <li>Item 3</li>
+                  </ol>
+                  <ul>
+                    <li>Item 1</li>
+                    <li>Item 2</li>
+                    <li>Item 3</li>
+                  </ul>
               `
   })
   
   // handle file uploaded
-  const fileUploaded: OnFinish = ({ file, event }: { file: UploadFileInfo, event?: ProgressEvent }) => {
+  const fileUploaded = ({ file, event }) => {
     if (event != null) {
-      const fname = JSON.parse((event?.target as XMLHttpRequest).response).path.filename
+      const fname = JSON.parse((event?.target).response).path.filename
       newAttachmentModel.value.link = `http://localhost:3000/public/uploads/${fname}`
       console.log('link', newAttachmentModel.value.link)
     }
@@ -141,9 +118,7 @@
   
   // handle file removed
   function fileRemoved() {
-    axios.delete(`http://localhost:3000/api/v1/image/${newAttachmentModel.value.link.split('/').pop()}`).then(res => {
-      newAttachmentModel.value.link = null
-    })
+    //   newAttachmentModel.value.link = null
   }
   
   // add a new attachment
@@ -156,48 +131,33 @@
     showNewAttachmentModal.value = true
   }
   
-  async function uploadAttachment(e: MouseEvent) {
+  async function uploadAttachment(e) {
     e.preventDefault()
   
     saveDocument(() => {
       newAttachmentFormRef.value?.validate(async errors => {
         console.log('posting to writing id', writingModel.value.id)
         if (!errors) {
-          axios.post('http://localhost:3000/api/v1/link/writing', {
-            params: {
+            // post document
+            const params = {
               fk_writing: writingModel.value.id,
               title: newAttachmentModel.value.title,
               link: newAttachmentModel.value.link,
               fk_link_type: newAttachmentModel.value.type
             }
-          }).then(res => {
-            writingModel.value.links.push({
-              title: newAttachmentModel.value.title,
-              link: newAttachmentModel.value.link,
-              link_type: {
-                id: newAttachmentModel.value.type,
-                title: linkTypes.value?.find(l => l.value == newAttachmentModel.value.type).label
-              },
-              writing_link_id: res.data.id
-            })
-  
-            console.log('new attachment', {
-              title: newAttachmentModel.value.title,
-              link: newAttachmentModel.value.link,
-              link_type: {
-                id: newAttachmentModel.value.type,
-                title: linkTypes.value?.find(l => l.value == newAttachmentModel.value.type).label
-              },
-              writing_link_id: res.data.id
-            })
-  
-            showNewAttachmentModal.value = false
-          }, res => {
-            console.error('Backend validation error', res.response.data)
-            message.error('Ein Fehler ist aufgetreten')
-          })
+                // writingModel.value.links.push({
+                //   title: newAttachmentModel.value.title,
+                //   link: newAttachmentModel.value.link,
+                //   link_type: {
+                //     id: newAttachmentModel.value.type,
+                //     title: linkTypes.value?.find(l => l.value == newAttachmentModel.value.type).label
+                //   },
+                //   writing_link_id: res.data.id
+                // })
+    
+                showNewAttachmentModal.value = false
         } else {
-          message.error('Ihre Eingabe enthält Fehler')
+          // error validating
         }
       })
     })
@@ -206,7 +166,7 @@
   }
   
   // edit the attachment
-  function editAttachment(id: number) {
+  function editAttachment(id) {
     const idx = writingModel.value.links.findIndex(l => l.writing_link_id == id)
     const link = writingModel.value.links[idx]
     attachmentId = idx
@@ -221,35 +181,31 @@
     showEditAttachmentModal.value = true
   }
   
-  // put the edited attachment
-  function updateAttachment(e: MouseEvent) {
+  // update the edited attachment in backend
+  function updateAttachment(e) {
     e.preventDefault()
   
     editAttachmentFormRef.value?.validate(async errors => {
       if (!errors) {
-        axios.put('http://localhost:3000/api/v1/link/writing', {
-          params: {
+        // update
+        const params = {
             writing_link_id: writingModel.value.links[attachmentId].writing_link_id,
             title: editAttachmentModel.value.title,
             link: editAttachmentModel.value.link,
             fk_link_type: editAttachmentModel.value.type
           }
-        }).then(res => {
-          writingModel.value.links[attachmentId].title = editAttachmentModel.value.title
-          writingModel.value.links[attachmentId].link = editAttachmentModel.value.link
-          writingModel.value.links[attachmentId].link_type = {
-            id: editAttachmentModel.value.type,
-            title: linkTypes.value?.find(l => l.value == editAttachmentModel.value.type).label
-          }
+          
+        //   writingModel.value.links[attachmentId].title = editAttachmentModel.value.title
+        //   writingModel.value.links[attachmentId].link = editAttachmentModel.value.link
+        //   writingModel.value.links[attachmentId].link_type = {
+        //     id: editAttachmentModel.value.type,
+        //     title: linkTypes.value?.find(l => l.value == editAttachmentModel.value.type).label
+        //   }
   
-          showEditAttachmentModal.value = false
-          attachmentId = null
-        }, res => {
-          console.error('Backend validation error', res.response.data)
-          message.error('Ein Fehler ist aufgetreten')
-        })
+            showEditAttachmentModal.value = false
+            attachmentId = null
       } else {
-        message.error('Ihre Eingabe enthält Fehler')
+        // error validating
       }
     })
   
@@ -257,24 +213,21 @@
   }
   
   // remove attachment from writing
-  function removeAttachment(id: number) {
-    axios.delete(`http://localhost:3000/api/v1/link/writing/${id}`).then(() => {
-      let idx = writingModel.value.links.findIndex(l => l.writing_link_id == id)
-      writingModel.value.links.splice(idx)
-    }, () => {
-      message.error(`Couldn't remove attachment.`)
-    })
+  function removeAttachment(id) {
   }
   
   // get icon for attachment
-  function getAttachmentIcon(link_type: string) {
-    if (link_type == 'Music') return MusicIcon
-    else if (link_type == 'Image') return ImageIcon
-    else if (link_type == 'Wiki') return WikiIcon
-    else if (link_type == 'Tips') return TipIcon
-    else if (link_type == 'Inspiration') return InspirationIcon
-    else return OtherIcon
+  function getAttachmentIcon(link_type) {
+  const iconMapping = {
+    'Music': 'i-heroicons-musical-note',
+    'Image': 'i-heroicons-photo',
+    'Wiki': 'i-heroicons-light-bulb',
+    'Tips': 'i-heroicons-chat-bubble-bottom-center-text',
+    'Inspiration': 'i-heroicons-heart',
   }
+
+  return iconMapping[link_type] || 'i-heroicons-rectangle-stack'
+}
   
   // save the document to the db
   function saveDocument(cb = () => { }) {
@@ -284,56 +237,43 @@
   
     // save to db
     if (firstSave == false || !writingModel.value.id) {
-      // save to db
-      axios.post('http://localhost:3000/api/v1/writing', {
-        params: {
-          created: writingModel.value.created,
-          image: writingModel.value.image,
-          content: writingModel.value.content,
-          favourite: writingModel.value.favourite,
-          draft: writingModel.value.draft,
-          tags: writingModel.value.tags,
-          links: writingModel.value.links,
-          editors: writingModel.value.editors,
-          location: writingModel.value.location
-        }
-      }).then(res => {
-        // update writingModel with id
-        firstSave = true
-        writingModel.value.id = res.data.id
-        console.log('saved id', writingModel.value.id)
-        saving.value = false
-        cb()
-      }, res => {
-        console.error('Backend validation error', res.response.data)
-        message.error('An error occured while saving your document')
-        saving.value = false
-        cb()
-      })
+      const params = {
+        created: writingModel.value.created,
+        image: writingModel.value.image,
+        content: writingModel.value.content,
+        favourite: writingModel.value.favourite,
+        draft: writingModel.value.draft,
+        tags: writingModel.value.tags,
+        links: writingModel.value.links,
+        editors: writingModel.value.editors,
+        location: writingModel.value.location
+      }
+    
+    //     // update writingModel with id
+    //     firstSave = true
+    //     writingModel.value.id = res.data.id
+    //     saving.value = false
+    //     cb()
+    //   }, res => {
+    //     console.error('Backend validation error', res.response.data)
+    //     message.error('An error occured while saving your document')
+    //     saving.value = false
+    //     cb()
+    //   })
     } else if (writingModel.value.id) {
       // update in db
-      axios.put(`http://localhost:3000/api/v1/writing/${writingModel.value.id}`, {
-        params: {
-          created: writingModel.value.created,
-          image: writingModel.value.image,
-          content: writingModel.value.content,
-          favourite: writingModel.value.favourite,
-          draft: writingModel.value.draft,
-          tags: writingModel.value.tags,
-          links: writingModel.value.links,
-          editors: writingModel.value.editors,
-          location: writingModel.value.location
-        }
-      }).then(res => {
-        // message.success('Your document has been saved')
-        saving.value = false
+      const params = {
+        created: writingModel.value.created,
+        image: writingModel.value.image,
+        content: writingModel.value.content,
+        favourite: writingModel.value.favourite,
+        draft: writingModel.value.draft,
+        tags: writingModel.value.tags,
+        links: writingModel.value.links,
+        editors: writingModel.value.editors,
+        location: writingModel.value.location
+      }
         cb()
-      }, res => {
-        console.error('Backend validation error', res.response.data)
-        message.error('An error occured while saving your document')
-        saving.value = false
-        cb()
-      })
     }
   }
   
@@ -349,70 +289,84 @@
     saveDocument()
   }
   </script>
-  
 
 <template>
-    <router-link to="/writings">
-      <n-tooltip>
-        <template #trigger>
-          <n-button class="backlink" strong secondary type="tertiary">
-            <template #icon>
-              <n-icon :component="BackIcon" />
-            </template>
-          </n-button>
-        </template>
-        Go Back
-      </n-tooltip>
-    </router-link>
-  
     <div>
       <div v-if="editor">
         <bubble-menu class="bubble-menu" :tippy-options="{ duration: 100 }" :editor="editor">
-          <n-icon @click="editor.chain().focus().toggleBold().run()" :class="{ 'is-active': editor.isActive('bold') }">
-            <bold-icon />
-          </n-icon>
-          <n-icon @click="editor.chain().focus().toggleItalic().run()"
-            :class="{ 'is-active': editor.isActive('italic') }">
-            <italic-icon />
-          </n-icon>
-          <n-icon @click="editor.chain().focus().toggleStrike().run()"
-            :class="{ 'is-active': editor.isActive('strike') }">
-            <strikethrough-icon />
-          </n-icon>
-          <n-icon @click="editor.chain().focus().setTextAlign('left').run()"
-            :class="{ 'is-active': editor.isActive({ textAlign: 'left' }) }">
-            <left-icon />
-          </n-icon>
-          <n-icon @click="editor.chain().focus().setTextAlign('center').run()"
-            :class="{ 'is-active': editor.isActive({ textAlign: 'center' }) }">
-            <center-icon />
-          </n-icon>
-          <n-icon @click="editor.chain().focus().setTextAlign('right').run()"
-            :class="{ 'is-active': editor.isActive({ textAlign: 'right' }) }">
-            <right-icon />
-          </n-icon>
-          <n-icon @click="editor.chain().focus().setTextAlign('justify').run()"
-            :class="{ 'is-active': editor.isActive({ textAlign: 'justify' }) }">
-            <justified-icon />
-          </n-icon>
+          <div class="icon">
+            <u-icon
+              name="i-tabler-bold"
+              @click="editor.chain().focus().toggleBold().run()" :class="{ 'is-active': editor.isActive('bold') }" />
+          </div>
+          <div class="icon">
+            <u-icon
+            name="i-tabler-italic"
+            @click="editor.chain().focus().toggleItalic().run()"
+            :class="{ 'is-active': editor.isActive('italic') }" />
+          </div>
+          <div class="icon">
+            <u-icon
+              name="i-tabler-strikethrough"
+              @click="editor.chain().focus().toggleStrike().run()"
+              :class="{ 'is-active': editor.isActive('strike') }"/>
+          </div>
+          <div class="icon">
+          <u-icon
+            name="i-tabler-align-left"
+            @click="editor.chain().focus().setTextAlign('left').run()"
+            :class="{ 'is-active': editor.isActive({ textAlign: 'left' }) }" />
+          </div>
+          <div class="icon">
+            <u-icon
+              name="i-tabler-align-center"
+              @click="editor.chain().focus().setTextAlign('center').run()"
+              :class="{ 'is-active': editor.isActive({ textAlign: 'center' }) }" />
+          </div>
+          <div class="icon">
+          <u-icon
+            name="i-tabler-align-right"
+            @click="editor.chain().focus().setTextAlign('right').run()"
+            :class="{ 'is-active': editor.isActive({ textAlign: 'right' }) }" />
+          </div>
+          <div class="icon">
+          <u-icon
+            name="i-tabler-align-justified"
+            @click="editor.chain().focus().setTextAlign('justify').run()"
+            :class="{ 'is-active': editor.isActive({ textAlign: 'justify' }) }" />
+          </div>
         </bubble-menu>
         <floating-menu class="floating-menu" :tippy-options="{ duration: 100 }" :editor="editor">
-          <n-icon @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
-            :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }">
-            <h1-icon />
-          </n-icon>
-          <n-icon @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
-            :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }">
-            <h2-icon />
-          </n-icon>
-          <n-icon @click="editor.chain().focus().toggleBulletList().run()"
-            :class="{ 'is-active': editor.isActive('bulletList') }">
-            <list-icon />
-          </n-icon>
-          <n-icon @click="editor.chain().focus().toggleBlockquote().run()"
-            :class="{ 'is-active': editor.isActive('quote') }">
-            <quote-icon />
-          </n-icon>
+          <div class="icon">
+            <u-icon
+              @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
+              :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
+              name="i-tabler-h-1" />
+          </div>
+          <div class="icon">
+            <u-icon
+              @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
+              :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
+              name="i-tabler-h-2" />
+          </div>
+          <div class="icon">
+            <u-icon
+              @click="editor.chain().focus().toggleBulletList().run()"
+              :class="{ 'is-active': editor.isActive('bulletList') }"
+              name="i-tabler-list" />
+          </div>
+          <div class="icon">
+            <u-icon
+              @click="editor.chain().focus().toggleOrderedList().run()"
+              :class="{ 'is-active': editor.isActive('orderedList') }"
+              name="i-tabler-list-numbers" />
+          </div>
+          <div class="icon">
+            <u-icon
+              @click="editor.chain().focus().toggleBlockquote().run()"
+              :class="{ 'is-active': editor.isActive('quote') }"
+              name="i-tabler-quote" />
+          </div>
         </floating-menu>
       </div>
       <p class="character-count" v-if="editor">
@@ -421,194 +375,159 @@
       </p>
       <editor-content class="main-editor" :editor="editor" />
     </div>
-    <n-space class="action-buttons" justify="space-between" align="center">
-      <n-space>
-        <n-tooltip trigger="hover">
-          <template #trigger>
-            <n-button @click="toggleFavourite" :type="writingModel.favourite ? 'info' : 'default'" secondary>
-              <template #icon>
-                <n-icon :component="writingModel.favourite ? StarIconFilled : StarIcon" />
-              </template>
-            </n-button>
-          </template>
-          Favorite
-        </n-tooltip>
-        <n-tooltip trigger="hover">
-          <template #trigger>
-            <n-button @click="toggleDraft" :type="writingModel.draft ? 'warning' : 'default'" secondary>
-              <template #icon>
-                <n-icon :component="writingModel.draft ? DraftIconFilled : DraftIcon" />
-              </template>
-            </n-button>
-          </template>
-          Draft
-        </n-tooltip>
-      </n-space>
-      <n-space justify="end">
-        <n-spin size="small" v-if="saving" />
-        <n-button v-if="!saving" @click="() => saveDocument()" type="primary">
-          <template #icon>
-            <n-icon :component="SaveIcon" />
-          </template>
-          Save
-        </n-button>
-      </n-space>
-    </n-space>
-  
-    <n-space class="section-header" align=" center">
-      <n-icon :component="CalendarIcon" size="24" />
-      <h3>Created</h3>
-    </n-space>
-    <n-form-item class="datetime-container">
-      <n-date-picker type="datetime" v-model:value="writingModel.created"></n-date-picker>
-    </n-form-item>
-  
-    <n-space class="tags-header" align="center">
-      <n-icon :component="LocationIcon" size="24" />
-      <h3>Location</h3>
-    </n-space>
-    <n-form-item class="datetime-container">
-      <n-input type="text" placeholder="Where was this written?" maxlength="80" v-model:value="writingModel.location" />
-    </n-form-item>
-  
-    <n-space class="tags-header" align="center">
-      <n-icon :component="PersonIcon" size="24" />
-      <h3>Editors</h3>
-    </n-space>
-    <n-dynamic-tags v-model:value="writingModel.editors" @update:value="() => saveDocument()" />
-  
-    <n-space class="tags-header" align="center">
-      <n-icon :component="TagIcon" size="24" />
-      <h3>Tags</h3>
-    </n-space>
-    <n-dynamic-tags v-model:value="writingModel.tags" @update:value="() => saveDocument()" />
-  
-    <n-space align="center" class="section-header">
-      <n-icon :component="AttachmentIcon" size="24" />
-      <h3>Attachments</h3>
-    </n-space>
-    <n-space align="center">
-      <div v-for="link in writingModel.links">
-        <n-card class="writing" hoverable>
-          <n-space align="center">
-            <n-space align="center">
-              <n-icon :component="getAttachmentIcon(link.link_type.title)" />
-              <a :href="link.link" target="_blank">{{ link.title }}</a>
-            </n-space>
-            <n-tooltip>
-              <template #trigger>
-                <n-button @click="() => removeAttachment(link.writing_link_id)" strong secondary type="tertiary"
-                  class="unlink">
-                  <template #icon>
-                    <n-icon :component="UnlinkIcon" />
-                  </template>
-                </n-button>
-              </template>
-              Remove
-            </n-tooltip>
-            <n-tooltip>
-              <template #trigger>
-                <n-button @click="() => editAttachment(link.writing_link_id)" strong secondary type="tertiary">
-                  <template #icon>
-                    <n-icon :component="EditIcon" />
-                  </template>
-                </n-button>
-              </template>
-              Edit
-            </n-tooltip>
-          </n-space>
-        </n-card>
+    <div class="flex justify-between mt-6">
+      <div>
+        <u-tooltip text="Favorite">
+            <u-button
+                @click="toggleFavourite"
+                :variant="writingModel.favourite ? 'solid' : 'outline'"
+                color="amber"
+                size="lg"
+                :icon="writingModel.favourite ? 'i-heroicons-star-solid' : 'i-heroicons-star'"
+                />
+        </u-tooltip>
+        <u-tooltip text="Draft">
+            <u-button
+                @click="toggleDraft"
+                :type="writingModel.draft ? 'solid' : 'outline'"
+                color="orange"
+                size="lg"
+                :icon="writingModel.draft ? 'i-heroicons-clock-solid' : 'i-heroicons-clock'"
+                />
+        </u-tooltip>
       </div>
-      <n-tooltip>
-        <template #trigger>
-          <n-button @click="addAttachment" strong secondary type="tertiary">
-            <template #icon>
-              <n-icon :component="AddIcon" />
-            </template>
-          </n-button>
-        </template>
-        Add Attachment
-      </n-tooltip>
-    </n-space>
+      <div>
+        <u-button v-if="!saving" icon="i-heroicons-arrow-down-on-square" :loading="saving" @click="() => saveDocument()" type="primary">
+            Save
+        </u-button>
+      </div>
+    </div>
   
-    <n-modal v-model:show="showEditAttachmentModal">
-      <n-card style="width: 600px" title="Edit Attachment" :bordered="false" size="huge" role="dialog" aria-modal="true">
+    <div class="flex gap-x-2">
+      <u-icon name="i-heroicons-calendar" />
+      <h3>Created</h3>
+    </div>
+    <div class="datetime-container">
+      <u-date-picker v-model="writingModel.created" />
+    </div>
+  
+    <u-form-group label="Location">
+      <u-input icon="i-heroicons-map" placeholder="Where was this written?" maxlength="80" v-model="writingModel.location" />
+    </u-form-group>
+  
+    <u-form-group label="Editors">
+      <u-input icon="i-heroicons-users" placeholder="Noah Horlacher" />
+      <!-- <u-select v-model="writingModel.editors" multiple @update:value="() => saveDocument()" /> -->
+    </u-form-group>
+
+    <u-form-group label="Tags">
+      <u-input icon="i-heroicons-tag" placeholder="Tags" />
+      <!-- <u-select v-model="writingModel.tags" multiple @update:value="() => saveDocument()" /> -->
+    </u-form-group>
+  
+    <div class="flex">
+      <u-icon name="i-tabler-link" size="24" />
+      <h3>Attachments</h3>
+    </div>
+
+    <div class="flex justify-center">
+      <div v-for="(link, index) in writingModel.links" :key="index">
+        <u-card class="writing">
+          <div class="flex justify-start">
+
+            <div class="flex justify-start">
+              <u-icon :name="getAttachmentIcon(link.link_type.title)" />
+              <NuxtLink to="link.link">{{ link.title }}</NuxtLink>
+            </div>
+
+            <u-tooltip text="Remove">
+                <u-button icon="i-tabler-link-off" @click="() => removeAttachment(link.writing_link_id)" class="unlink" />
+            </u-tooltip>
+
+            <u-tooltip text="Edit">
+                <u-button icon="i-tabler-edit" @click="() => editAttachment(link.writing_link_id)" />
+            </u-tooltip>
+            
+          </div>
+        </u-card>
+      </div>
+      <u-tooltip text="Add Attachment">
+          <u-button icon="i-heroicons-document-plus" @click="addAttachment" />
+      </u-tooltip>
+    </div>
+  
+    <u-modal v-model="showEditAttachmentModal">
+      <u-card style="width: 600px">
         <template #header>Edit Attachment</template>
-  
-        <n-form ref="editAttachmentFormRef" :model="editAttachmentModel" :rules="editAttachmentFormRules">
-          <n-form-item ref="rCategory" path="type" label="Category" required>
-            <n-select placeholder="—" v-model:value="editAttachmentModel.type" :options="linkTypes"
-              :consistent-menu-width="false" required />
-          </n-form-item>
-          <n-form-item path="title" label="Title" required>
-            <n-input v-model:value="editAttachmentModel.title" maxlength="30" type="text" @keydown.enter.prevent
+          <div ref="rCategory" path="type" label="Category" required>
+            <u-select placeholder="—" v-model="editAttachmentModel.type" :options="linkTypes" option-attribute="name" />
+          </div>
+          <div path="title" label="Title" required>
+            <u-input v-model="editAttachmentModel.title" maxlength="30" @keydown.enter.prevent
               placeholder="New Attachment" />
-          </n-form-item>
+          </div>
           <div v-if="editAttachmentModel.type == 2">
-            <n-form-item label="Image">
-              <n-upload accept=".jpeg,.jpg,.png,.gif,.webp" :max="1" name="image"
+            <div label="Image">
+              <!-- <u-upload accept=".jpeg,.jpg,.png,.gif,.webp" :max="1" name="image"
                 action="http://localhost:3000/api/v1/image/" @finish="fileUploaded" @remove="fileRemoved">
-                <n-button>Upload Image</n-button>
-              </n-upload>
-            </n-form-item>
+                <u-button>Upload Image</u-button>
+              </u-upload> -->
+            </div>
           </div>
           <div v-else>
-            <n-form-item path="link" label="Link" required>
-              <n-input v-model:value="editAttachmentModel.link" maxlength="256" type="text" @keydown.enter.prevent
+            <div path="link" label="Link" required>
+              <u-input v-model="editAttachmentModel.link" maxlength="256" @keydown.enter.prevent
                 placeholder="https://url.com/interesting" />
-            </n-form-item>
+            </div>
           </div>
-        </n-form>
   
         <template #footer>
-          <n-space justify="space-between">
-            <n-button @click="showEditAttachmentModal = false">Cancel</n-button>
-            <n-button type="success" @click="e => updateAttachment(e)">Save</n-button>
-          </n-space>
+          <div class="flex justify-between">
+            <u-button @click="showEditAttachmentModal = false">Cancel</u-button>
+            <u-button icon="i-heroicons-arrow-down-on-square" @click="e => updateAttachment(e)">Save</u-button>
+          </div>
         </template>
-      </n-card>
-    </n-modal>
+      </u-card>
+    </u-modal>
   
-    <n-modal v-model:show="showNewAttachmentModal">
-      <n-card style="width: 600px" title="Add Attachment" :bordered="false" size="huge" role="dialog" aria-modal="true">
+    <u-modal v-model="showNewAttachmentModal">
+      <u-card>
         <template #header>Add Attachment</template>
   
-        <n-form ref="newAttachmentFormRef" :model="newAttachmentModel" :rules="newAttachmentFormRules">
-          <n-form-item ref="rCategory" path="type" label="Category" required>
-            <n-select placeholder="—" v-model:value="newAttachmentModel.type" :options="linkTypes"
-              :consistent-menu-width="false" required />
-          </n-form-item>
-          <n-form-item path="title" label="Title" required>
-            <n-input v-model:value="newAttachmentModel.title" maxlength="30" type="text" @keydown.enter.prevent
+          <div ref="rCategory" path="type" label="Category" required>
+            <u-select placeholder="—" v-model="newAttachmentModel.type" :options="linkTypes"
+              option-attribute="name" />
+          </div>
+          <div path="title" label="Title" required>
+            <u-input v-model="newAttachmentModel.title" maxlength="30" @keydown.enter.prevent
               placeholder="New Attachment" />
-          </n-form-item>
+          </div>
           <div v-if="newAttachmentModel.type == 2">
-            <n-form-item label="Image">
-              <n-upload accept=".jpeg,.jpg,.png,.gif,.webp" :max="1" name="image"
+            <div label="Image">
+              <!-- <u-upload accept=".jpeg,.jpg,.png,.gif,.webp" :max="1" name="image"
                 action="http://localhost:3000/api/v1/image/" @finish="fileUploaded" @remove="fileRemoved">
-                <n-button>Upload Image</n-button>
-              </n-upload>
-            </n-form-item>
+                <u-button>Upload Image</u-button>
+              </u-upload> -->
+            </div>
           </div>
           <div v-else>
-            <n-form-item path="link" label="Link" required>
-              <n-input v-model:value="newAttachmentModel.link" maxlength="256" type="text" @keydown.enter.prevent
+            <div path="link" label="Link" required>
+              <u-input v-model="newAttachmentModel.link" maxlength="256" @keydown.enter.prevent
                 placeholder="https://url.com/interesting" />
-            </n-form-item>
+            </div>
           </div>
-        </n-form>
   
         <template #footer>
-          <n-space justify="space-between">
-            <n-button @click="showNewAttachmentModal = false">Cancel</n-button>
-            <n-button type="success" @click="uploadAttachment">Add</n-button>
-          </n-space>
+          <div class="flex justify-between">
+            <u-button @click="showNewAttachmentModal = false">Cancel</u-button>
+            <u-button icon="i-heroicons-plus" @click="uploadAttachment">Add</u-button>
+          </div>
         </template>
-      </n-card>
-    </n-modal>
+      </u-card>
+    </u-modal>
   </template>
 
-  <style>
+<style>
   .unlink {
     margin-left: 16px;
   }
@@ -642,16 +561,6 @@
     margin: 48px 0 16px 0;
   }
   
-  .bubble-menu,
-  .floating-menu {
-    cursor: pointer;
-    background-color: rgb(72, 72, 78);
-  }
-  
-  .action-buttons {
-    margin-top: 1em;
-  }
-  
   .character-count {
     opacity: .7;
     margin: 1em 0;
@@ -667,6 +576,8 @@
     border-radius: 3px;
     border: 2px solid rgba(255, 255, 255, .1);
     padding: 1em 2em;
+    letter-spacing: 0.025rem;
+    font-weight: 300;
   }
   
   .ProseMirror>*+* {
@@ -685,10 +596,27 @@
   .ProseMirror h2 {
     line-height: 1.1;
   }
+
+  .ProseMirror h1 {
+    font-size: 1.7rem;
+    font-weight: 800;
+  }
+
+  .ProseMirror h2 {
+    font-size: 1.3rem;
+    font-weight: 500;
+  }
   
   .ProseMirror ul,
   .ProseMirror ol {
     padding: 0 1rem;
+  }
+  .ProseMirror ul {
+    list-style: disc;
+  }
+
+  .ProseMirror ol {
+    list-style: decimal;
   }
   
   .ProseMirror blockquote {
@@ -696,44 +624,26 @@
     border-left: 4px solid rgba(255, 255, 255, 0.3);
   }
   
-  .bubble-menu {
-    display: flex;
-    padding: 0.2rem;
-    border-radius: 0.5rem;
-  }
-  
-  .bubble-menu .n-icon {
-    border: none;
-    background: none;
-    color: #FFF;
-    font-size: 1.5rem;
-    font-weight: 500;
-    padding: 0 0.2rem;
-    opacity: 0.6;
-  }
-  
-  .bubble-menu .n-icon:hover,
-  .bubble-menu .n-icon.is-active {
-    opacity: 1;
-  }
-  
+  .bubble-menu,
   .floating-menu {
+    cursor: pointer;
+    background-color: rgb(72, 72, 78);
+    
+    font-size: 1.3rem;
     display: flex;
-    padding: 0.2rem;
+    padding: 0.3rem 0.3rem 0 0.3rem;
     border-radius: 0.5rem;
   }
   
-  .floating-menu .n-icon {
-    border: none;
-    background: none;
-    font-size: 1.5rem;
-    font-weight: 500;
-    padding: 0 0.2rem;
+  .bubble-menu .icon,
+  .floating-menu .icon {
+    color: #FFF;
     opacity: 0.6;
+    margin: 0;
   }
   
-  .floating-menu .n-icon:hover,
-  .floating-menu .n-icon.is-active {
+  .bubble-menu .icon:is(:hover, .is-active),
+  .floating-menu .icon:is(:hover, .is-active) {
     opacity: 1;
   }
   </style>
