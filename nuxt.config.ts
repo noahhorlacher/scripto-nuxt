@@ -3,10 +3,13 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ['@nuxthq/ui'],
   ui: {
-    icons: ['tabler']
+    icons: ['tabler', 'carbon']
   },
   css: [
     '~/assets/css/normalize.css',
     '~/assets/css/style.css',
-  ]
+  ],
+  colorMode: {
+    preference: 'light'
+  }
 })

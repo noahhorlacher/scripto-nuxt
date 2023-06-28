@@ -15,6 +15,10 @@ const props = defineProps({
   modelValue: {
     type: String,
     default: ''
+  },
+  showCount: {
+    type: Boolean,
+    default: true
   }
 })
 
@@ -128,26 +132,23 @@ watch(
       </div>
     </floating-menu>
   </div>
-  <p class="character-count" v-if="editorObject">
-    {{ editorObject.storage.characterCount.characters() }} characters, {{ editorObject.storage.characterCount.words() }}
-    words
-  </p>
+
+  <u-card class="fixed right-16 bottom-8 z-10 text-right flex opacity-70 hover:opacity-100 transition-opacity" v-if="editorObject && showCount">
+      <u-tooltip class="mr-8 opacity-70 hover:opacity-100 transition-opacity" text="Character count">
+        <u-icon name="i-carbon-letter-aa" class="mr-2" />
+        <p>{{ editorObject.storage.characterCount.characters() }}</p>
+      </u-tooltip>
+      <u-tooltip text="Word count" class="opacity-70 hover:opacity-100 transition-opacity">
+        <u-icon name="i-carbon-character-sentence-case" class="mr-2" />
+        <p>{{ editorObject.storage.characterCount.words() }}</p>
+      </u-tooltip>
+  </u-card>
+
   <editor-content class="main-editor" :editor="editorObject" />
 </div>
 </template>
 
 <style>
-.character-count {
-    opacity: .7;
-    margin: 1em 0;
-    text-align: right;
-}
-
-.title-editor .ProseMirror {
-    padding: .6em 2em;
-    border: 0;
-}
-
 .main-editor .ProseMirror {
     border-radius: 3px;
     border: 2px solid rgba(255, 255, 255, .1);

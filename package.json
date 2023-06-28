@@ -9,6 +9,9 @@
     "postinstall": "nuxt prepare"
   },
   "devDependencies": {
+    "@iconify-json/carbon": "^1.1.18",
+    "@iconify-json/material-symbols": "^1.1.49",
+    "@iconify-json/mdi": "^1.1.52",
     "@iconify-json/tabler": "^1.1.80",
     "@nuxt/devtools": "latest",
     "@nuxthq/ui": "^2.5.0",

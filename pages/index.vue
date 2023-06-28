@@ -269,6 +269,7 @@ function toggleDraft() {
         <u-button
           @click="toggleFavourite"
           color="amber"
+          square
           :variant="writingModel.favourite ? 'solid' : 'outline'"
           :icon="writingModel.favourite ? 'i-heroicons-star-solid' : 'i-heroicons-star'" />
       </u-tooltip>
