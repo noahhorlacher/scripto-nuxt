@@ -6,6 +6,10 @@ const props = defineProps({
   modelValue: {
     type: Date,
     default: null
+  },
+  loading: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -44,7 +48,7 @@ const attrs = [{
 
 <template>
     <UPopover :popper="{ placement: 'bottom-start' }">
-        <UButton icon="i-heroicons-calendar-days-20-solid" :label="label" />
+        <UButton :loading="loading" icon="i-heroicons-calendar-days-20-solid" :label="label" />
 
         <template #panel="{ close }">
             <VCalendarDatePicker
@@ -56,9 +60,9 @@ const attrs = [{
                 title-position="left"
                 trim-weeks
                 :first-day-of-week="2"
+                mode="dateTime"
+                is24hr
             />
         </template>
     </UPopover>
 </template>
-
-<style scoped></style>

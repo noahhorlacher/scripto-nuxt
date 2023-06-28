@@ -3,7 +3,8 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ['@nuxthq/ui'],
   ui: {
-    icons: ['tabler', 'carbon']
+    icons: ['tabler', 'carbon'],
+    safelistColors: ['amber', 'orange']
   },
   css: [
     '~/assets/css/normalize.css',

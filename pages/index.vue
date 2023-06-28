@@ -1,4 +1,6 @@
 <script setup>
+import { formatDateTime } from '~/services/dateTime'
+
 const editorContent = ref(`
                   <h1>As ships sail seas</h1>
                   <h2>Waves will crash</h2>
@@ -263,26 +265,28 @@ function toggleDraft() {
 <template>
   <editor v-model="editorContent" />
 
-  <div class="flex justify-between mt-6">
+  <div class="flex justify-between mt-6 mb-12">
     <div>
       <u-tooltip text="Favorite">
         <u-button
           @click="toggleFavourite"
+          :loading="saving"
+          class="mr-4"
           color="amber"
-          square
           :variant="writingModel.favourite ? 'solid' : 'outline'"
           :icon="writingModel.favourite ? 'i-heroicons-star-solid' : 'i-heroicons-star'" />
       </u-tooltip>
       <u-tooltip text="Draft">
         <u-button
           @click="toggleDraft"
+          :loading="saving"
           color="orange"
           :variant="writingModel.draft ? 'solid' : 'outline'"
           :icon="writingModel.draft ? 'i-heroicons-clock-solid' : 'i-heroicons-clock'" />
       </u-tooltip>
     </div>
     <div>
-      <u-button v-if="!saving" label="Save" icon="i-heroicons-arrow-down-on-square" :loading="saving" @click="() => saveDocument()"
+      <u-button label="Save" icon="i-heroicons-arrow-down-on-square" :loading="saving" @click="() => saveDocument()"
         type="primary" />
     </div>
   </div>
@@ -291,8 +295,9 @@ function toggleDraft() {
     <u-icon name="i-heroicons-calendar" />
     <h3>Created</h3>
   </div>
-  <div class="datetime-container">
-    <u-date-picker v-model="writingModel.created" />
+  <div class="flex items-center">
+    <datetime-picker v-model="writingModel.created" :loading="saving" class="mr-4" />
+    <p>{{ formatDateTime(writingModel.created) }}</p>
   </div>
 
   <u-form-group label="Location">
